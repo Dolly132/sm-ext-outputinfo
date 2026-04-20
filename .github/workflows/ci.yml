@@ -3,14 +3,15 @@ name: Build AlliedModders Extension
 on:
   push:
     branches:
-      - 'master'
-      - 'main'
+      - master
+      - main
     tags:
-      - "*"
+      - '*'
   pull_request:
     branches:
-      - 'master'
-      - 'main'
+      - master
+      - main
+  workflow_dispatch:
 
 jobs:
   build-release-extension:
