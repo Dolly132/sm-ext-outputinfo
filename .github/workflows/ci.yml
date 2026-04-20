@@ -79,9 +79,7 @@ jobs:
         env:
           BREAKPAD_SYMBOL_SERVER: ${{ secrets.BREAKPAD_SYMBOL_SERVER }}
         run: |
-          mkdir -p build
-          cd build
-          python ../sm-ext-common/configure.py --enable-optimize --symbol-files --sdks="${{ matrix.sdks }}"
+          python sm-ext-common/configure.py --enable-optimize --symbol-files --sdks="${{ matrix.sdks }}"
           ambuild
 
       - name: Upload artifact
