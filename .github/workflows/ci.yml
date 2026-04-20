@@ -1,121 +1,19 @@
-name: Build Sourcemod Extension
+name: Build AlliedModders Extension
 
 on:
   push:
     branches:
-      - main
-      - master
+      - 'master'
+      - 'main'
     tags:
-      - '*'
+      - "*"
   pull_request:
     branches:
-      - main
-      - master
-  workflow_dispatch:
+      - 'master'
+      - 'main'
 
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            python-version: '3.10'
-            sourcemod-version: 1.11-dev
-            sdks: css,csgo
-            artifact-name: Linux
-          - os: windows-2022
-            python-version: '3.10'
-            sourcemod-version: 1.11-dev
-            sdks: css
-            artifact-name: Windows
-
-    steps:
-      - name: Install Linux packages
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt update
-          sudo apt install -y --no-install-recommends g++-multilib
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Checkout extension
-        uses: actions/checkout@v4
-        with:
-          path: extension
-          submodules: recursive
-
-      - name: Checkout SourceMod
-        uses: actions/checkout@v4
-        with:
-          repository: alliedmodders/sourcemod
-          ref: ${{ matrix.sourcemod-version }}
-          path: sourcemod
-          submodules: recursive
-
-      - name: Set up MSVC
-        if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1
-
-      - name: Install AMBuild
-        shell: bash
-        run: |
-          python -m pip install --upgrade pip wheel
-          python -m pip install git+https://github.com/alliedmodders/ambuild
-
-      - name: Install SourceMod dependencies
-        shell: bash
-        run: |
-          bash sourcemod/tools/checkout-deps.sh -m -s "${{ matrix.sdks }}"
-
-      - name: Build
-        working-directory: extension
-        shell: bash
-        env:
-          BREAKPAD_SYMBOL_SERVER: ${{ secrets.BREAKPAD_SYMBOL_SERVER }}
-        run: |
-          python sm-ext-common/configure.py --enable-optimize --symbol-files --sdks="${{ matrix.sdks }}"
-          ambuild
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact-name }}
-          path: extension/build/package
-          if-no-files-found: error
-
-  release:
-    name: Release
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: build
-    runs-on: ubuntu-22.04
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Package
-        shell: bash
-        run: |
-          version="${GITHUB_REF#refs/tags/}"
-          repo="${{ github.event.repository.name }}"
-
-          if [ -d "./Linux" ]; then
-            tar -czf "${repo}-${version}-linux.tar.gz" -C "./Linux" .
-          fi
-
-          if [ -d "./Windows" ]; then
-            zip -r "${repo}-${version}-windows.zip" "./Windows"
-          fi
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            *.tar.gz
-            *.zip
+  build-release-extension:
+    uses: Dolly132/ci-workflows/.github/workflows/shared_build_release_am_extension.yml@v1
+    with:
+      sdks: "css"
