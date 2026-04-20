@@ -48,6 +48,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: extension
+          submodules: recursive
 
       - name: Checkout SourceMod
         uses: actions/checkout@v4
@@ -67,14 +68,7 @@ jobs:
           python -m pip install --upgrade pip wheel
           python -m pip install git+https://github.com/alliedmodders/ambuild
 
-      - name: Install SourceMod dependencies (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          bash sourcemod/tools/checkout-deps.sh -m -s "${{ matrix.sdks }}"
-
-      - name: Install SourceMod dependencies (Windows)
-        if: runner.os == 'Windows'
+      - name: Install SourceMod dependencies
         shell: bash
         run: |
           bash sourcemod/tools/checkout-deps.sh -m -s "${{ matrix.sdks }}"
@@ -87,7 +81,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          python ../configure.py --enable-optimize --symbol-files --sdks="${{ matrix.sdks }}"
+          python ../sm-ext-common/configure.py --enable-optimize --symbol-files --sdks="${{ matrix.sdks }}"
           ambuild
 
       - name: Upload artifact
@@ -112,8 +106,6 @@ jobs:
         run: |
           version="${GITHUB_REF#refs/tags/}"
           repo="${{ github.event.repository.name }}"
-
-          ls -R
 
           if [ -d "./Linux" ]; then
             tar -czf "${repo}-${version}-linux.tar.gz" -C "./Linux" .
